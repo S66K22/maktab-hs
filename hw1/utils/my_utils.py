@@ -33,7 +33,7 @@ def read_csv(path: str, mode: str, header: list, delimiter: str):
 def stringiy_dictionary(dictionary: dict, delimiter: str) -> str:
     result = ""
     for key, value in dictionary.items():
-        result += f"{key} - {value}\n"
+        result += f"{key}{delimiter}{value}\n"
     return result
 
 def write_to_text_file(dictionary: dict, path: str, header: list[str], mode:str, delimiter: str) -> None:
@@ -41,12 +41,12 @@ def write_to_text_file(dictionary: dict, path: str, header: list[str], mode:str,
     with open(path, mode) as f:
         f.write(text_to_write)
 
-def read_from_text_file(path: str, mode: str) -> dict:
+def read_from_text_file(path: str, mode: str, delimiter: str) -> dict:
     repo = dict()
     try:
         with open(path, mode) as f:
             for line in f.readlines():
-                key_value = line.strip().split(" - ")
+                key_value = line.strip().split(delimiter)
                 repo[key_value[0]] = int(key_value[1])
     except FileNotFoundError:
         pass
