@@ -3,6 +3,7 @@ from utils import (add_to_dictionary, search_dictionary, show_dict,
 
 FILE_PATH = "repo.csv"
 HEADER = ["product", "count"]
+DELIMITER = " - "
 
 def report(dictionary: dict) -> str:
     report_string = f"There are {len(dictionary)} distinct products in repository.\n"
@@ -30,7 +31,7 @@ def report(dictionary: dict) -> str:
 
 def main():
     clear_screen()
-    repo = read_from_text_file(FILE_PATH, "r")
+    repo = read_from_text_file(FILE_PATH, "r", DELIMITER)
     while True:
         command = input("enter [a] to add new product,\n"
                         "enter [s] to search a product\n"
@@ -73,14 +74,14 @@ def main():
         elif command == "sh":
             show_dict(repo, print)
         elif command == "sa":
-            write_to_text_file(repo, FILE_PATH, HEADER, "w", " - ")
+            write_to_text_file(repo, FILE_PATH, HEADER, "w", DELIMITER)
         elif command == "re":
             if len(repo) == 0:
                 print("There is no item in repo\n")
             else:
                 print(report(repo))
         else:
-            write_to_text_file(repo, FILE_PATH, HEADER, "w", " - ")
+            write_to_text_file(repo, FILE_PATH, HEADER, "w", DELIMITER)
             break
         input("# Press Enter to continue...")
         clear_screen()
