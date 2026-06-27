@@ -1,10 +1,13 @@
 from typing import Callable
 import csv
 import os
+from .exceptions import EmptyKey, ExistingKey
 
 def add_to_dictionary(dictionary: dict, key: str, value:str, force: bool) -> None:
-    if (key in dictionary) and (force == False):
-        raise KeyError("Key Exists.")
+    if (key in dictionary) and (not force):
+        raise ExistingKey("Key Exists.")
+    if len(key) == 0:
+        raise EmptyKey("Key is empty.")
     dictionary[key] = value
 
 def search_dictionary(dictionary: dict, key: str):
@@ -54,3 +57,15 @@ def read_from_text_file(path: str, mode: str, delimiter: str) -> dict:
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def get_string_input(msg: str, make_lower: bool=True) -> str:
+    value = input(msg)
+    if make_lower:
+        value = value.lower()
+    value = value.strip()
+    return value
+
+def get_int_input(msg: str) -> int:
+    value = input(msg).strip()
+    return int(value)
+
