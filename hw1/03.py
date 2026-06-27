@@ -1,5 +1,6 @@
 from utils import (add_to_dictionary, search_dictionary, show_dict,
-                   write_to_text_file, read_from_text_file, clear_screen)
+                   write_to_text_file, read_from_text_file, clear_screen,
+                   get_string_input, get_int_input, ExistingKey, EmptyKey)
 
 FILE_PATH = "repo.csv"
 HEADER = ["product", "count"]
@@ -33,33 +34,36 @@ def main():
     clear_screen()
     repo = read_from_text_file(FILE_PATH, "r", DELIMITER)
     while True:
-        command = input("enter [a] to add new product,\n"
+        command = get_string_input("enter [a] to add new product,\n"
                         "enter [s] to search a product\n"
                         "enter [se] to sell a product\n"
                         "enter [sh] to show all products\n"
                         "enter [sa] to save all data to a file.\n"
                         "enter [re] to show report\n"
                         "enter any other key to exit\n"
-                        "## ").strip()
+                        "## ")
         
         if command == 'a':
             try:
-                key = input("Enter product name:\n# ").strip()
-                value = int(input("Enter number of products:\n# ").strip())
+                key = get_string_input("Enter product name:\n# ")
+                value = get_int_input("Enter number of products:\n# ")
                 add_to_dictionary(repo, key, value, False)
-            except KeyError:
+            except ExistingKey:
                 value += search_dictionary(repo, key)
                 add_to_dictionary(repo, key, value, True)
+            except EmptyKey as e:
+                print(e)
+
         elif command == "s":
-            key = input("Enter product name:\n# ").strip()
+            key = get_string_input("Enter product name:\n# ")
             value = search_dictionary(repo, key)
             if value is None:
                 print(f"{key} does not exists.\n")
             else:
                 print(f"{key}: {value}")
         elif command == 'se':
-            key = input("Enter product name:\n# ").strip()
-            value = int(input("Enter number of products you want to se:\n# ").strip()) * (-1)
+            key = get_string_input("Enter product name:\n# ")
+            value = get_int_input("Enter number of products you want to se:\n# ") * (-1)
             temp_value = search_dictionary(repo, key)
             if temp_value is None:
                 print(f"{key} is not a valid product name")
