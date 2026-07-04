@@ -1,15 +1,35 @@
 import numpy as np
+from typing import Callable
 
-def find_lost_value_idx(array: np.ndarray) -> np.ndarray:
-    rows, cols = array.shape
-    lost_cols = []
-    for col in np.arange(cols):
-        lost_col = [(row, col) for row in np.arange(rows) if array[row, col] == 0]
-        lost_cols.extend(lost_col)
-    return np.array(lost_cols)
+def find_valid_and_invalid_rows_for_given_col(data: np.ndarray, col: int, genders: np.ndarray, desired_gender: str) -> tuple[list[int], list[int]]:
+    """
+    Find valid and invalid row indices for a given column and gender.
 
-def find_valid_rows_for_given_col(data: np.ndarray, col: int, genders: np.ndarray, desired_gender: str) -> tuple[list[int], list[int]]:
-    rows, cols = data.shape
+    A row is considered valid if its gender matches ``desired_gender`` and the
+    value in the specified column is non-zero. A row is considered invalid if
+    its gender matches ``desired_gender`` and the value in the specified column
+    is zero.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        A 2D array containing the dataset.
+    col : int
+        The index of the column to inspect.
+    genders : np.ndarray
+        A 1D array containing the gender corresponding to each row in
+        ``data``.
+    desired_gender : str
+        The gender used to filter the rows.
+
+    Returns
+    -------
+    tuple[list[int], list[int]]
+        A tuple containing:
+        - A list of valid row indices.
+        - A list of invalid row indices.
+    """
+    rows, _ = data.shape
     valid_rows, invalid_rows = [], []
     for row in range(rows):
         if genders[row] != desired_gender:
@@ -18,15 +38,48 @@ def find_valid_rows_for_given_col(data: np.ndarray, col: int, genders: np.ndarra
             valid_rows.append(row)
         else:
             invalid_rows.append(row)
+    
+    # ChatGPT generated code
+    # gender_mask = genders == desired_gender
+    # valid_rows = np.where(gender_mask & (data[:, col] != 0))[0]
+    # invalid_rows = np.where(gender_mask & (data[:, col] == 0))[0]
     return valid_rows, invalid_rows
 
-def imputer(data: np.ndarray, member_genders, impute_func):
+def imputer(data: np.ndarray, member_genders: np.ndarray, impute_func: Callable):
+    """
+    Impute missing values in a dataset based on gender.
+
+    Missing values (represented by 0) are imputed independently for each
+    column and each gender. For every column, the function computes a
+    replacement value by applying ``impute_func`` to the non-missing values
+    of members with the same gender, then uses that value to replace the
+    missing entries for that gender.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        A 2D array containing the dataset. Missing values must be represented
+        by 0.
+    member_genders : np.ndarray
+        A 1D array containing the gender corresponding to each row in
+        ``data``.
+    impute_func : Callable
+        A function that takes a 1D NumPy array of valid values and returns a
+        single value to use for imputation (e.g., ``np.mean``, ``np.median``,
+        ``np.max``).
+
+    Returns
+    -------
+    np.ndarray
+        A copy of ``data`` with missing values imputed. The original input
+        array is not modified.
+    """
     _, cols = data.shape
     new_data = data.copy()
     for col in range(cols):
-        valid_males, invalid_males = find_valid_rows_for_given_col(data=new_data, col=col, 
+        valid_males, invalid_males = find_valid_and_invalid_rows_for_given_col(data=new_data, col=col, 
                                                                    genders=member_genders, desired_gender="m")
-        valid_females, invalid_females = find_valid_rows_for_given_col(data=new_data, col=col, 
+        valid_females, invalid_females = find_valid_and_invalid_rows_for_given_col(data=new_data, col=col, 
                                                                        genders=member_genders, desired_gender="f")
         if valid_males and invalid_males:
             new_data[invalid_males, col] = impute_func(new_data[valid_males, col])
@@ -36,11 +89,61 @@ def imputer(data: np.ndarray, member_genders, impute_func):
     return new_data
 
 def calculate_bmi(weight: np.ndarray, height: np.ndarray) -> np.ndarray: 
+    """
+    Calculate the Body Mass Index (BMI) for each individual.
+
+    BMI is computed using the formula:
+
+        BMI = weight / height²
+
+    where weight is measured in kilograms (kg) and height is measured in
+    meters (m).
+
+    Parameters
+    ----------
+    weight : np.ndarray
+        A 1D array containing the weights of individuals in kilograms.
+    height : np.ndarray
+        A 1D array containing the heights of individuals in meters.
+
+    Returns
+    -------
+    np.ndarray
+        A 1D array containing the BMI value for each individual.
+    """
     height = height.astype(np.float32) / 100
     weight = weight.astype(np.float32)
     return weight / (height ** 2)
 
 def calculate_criteria(data: np.ndarray, mu1: float, mu2: float):
+    """
+    Calculate a weighted criterion score for each individual.
+
+    The criterion is computed as a weighted sum of the individual's Body Mass
+    Index (BMI) and the value in the last column of ``data``:
+
+        criterion = BMI * mu1 + last_column * mu2
+
+    where BMI is calculated from the first two columns of ``data``.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        A 2D array where:
+        - the first column contains weights (kg),
+        - the second column contains heights (m),
+        - the last column contains the number of sessions.
+    mu1 : float
+        The weight assigned to the BMI component.
+    mu2 : float
+        The weight assigned to the number of sessions.
+
+    Returns
+    -------
+    np.ndarray
+        A 1D array containing the weighted criterion score for each
+        individual.
+    """
     return calculate_bmi(data[:, 0], data[:, 1]) * mu1 + data[:, -1] * mu2
 
 gym_data = np.array([
