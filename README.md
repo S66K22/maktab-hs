@@ -14,6 +14,8 @@ This repository contains my homework assignments, exercises, and practice projec
 ```text
 homeworks/
 ├── hw1/
+├── hw3/
+├── utils/
 ```
 
 Each directory contains the source code, documentation, and any required files for the corresponding assignment.
